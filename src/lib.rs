@@ -266,9 +266,14 @@
     clippy::wildcard_imports
 )]
 #![cfg_attr(error_generic_member_access, feature(error_generic_member_access))]
+#![cfg_attr(feature = "no-std", no_std)]
 
 #[cfg(all(thiserror_nightly_testing, not(error_generic_member_access)))]
 compile_error!("Build script probe failed to compile.");
+
+#[rustversion::before(1.81)]
+#[cfg(feature = "no-std")]
+::core::compile_error!("no-std feature requires rustversion 1.81 or newer");
 
 mod aserror;
 mod display;

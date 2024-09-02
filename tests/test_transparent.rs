@@ -1,8 +1,16 @@
 use anyhow::anyhow;
+
+#[rustversion::since(1.81)]
+#[cfg(feature = "no-std")]
+use core::error::Error as _;
+#[cfg(not(feature = "no-std"))]
 use std::error::Error as _;
+#[cfg(not(feature = "no-std"))]
 use std::io;
+
 use thiserror::Error;
 
+#[cfg(not(feature = "no-std"))]
 #[test]
 fn test_transparent_struct() {
     #[derive(Error, Debug)]

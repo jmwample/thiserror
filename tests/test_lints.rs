@@ -2,6 +2,10 @@
 
 use thiserror::Error;
 
+#[rustversion::since(1.81)]
+#[cfg(feature = "no-std")]
+pub use core::error::Error;
+#[cfg(not(feature = "no-std"))]
 pub use std::error::Error;
 
 #[test]

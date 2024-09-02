@@ -16,7 +16,13 @@ pub struct InnerBacktrace {
 #[cfg(thiserror_nightly_testing)]
 pub mod structs {
     use super::{Inner, InnerBacktrace};
+
+    #[rustversion::since(1.81)]
+    #[cfg(feature = "no-std")]
+    use core::error::{self, Error};
+
     use std::backtrace::Backtrace;
+    #[cfg(not(feature = "no-std"))]
     use std::error::{self, Error};
     use std::sync::Arc;
     use thiserror::Error;
@@ -151,6 +157,11 @@ pub mod structs {
 pub mod enums {
     use super::{Inner, InnerBacktrace};
     use std::backtrace::Backtrace;
+
+    #[rustversion::since(1.81)]
+    #[cfg(feature = "no-std")]
+    use core::error;
+    #[cfg(not(feature = "no-std"))]
     use std::error;
     use std::sync::Arc;
     use thiserror::Error;

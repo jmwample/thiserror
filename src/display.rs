@@ -1,4 +1,5 @@
 use core::fmt::Display;
+#[cfg(not(feature = "no-std"))]
 use std::path::{self, Path, PathBuf};
 
 #[doc(hidden)]
@@ -21,6 +22,7 @@ where
     }
 }
 
+#[cfg(not(feature = "no-std"))]
 impl<'a> AsDisplay<'a> for Path {
     type Target = path::Display<'a>;
 
@@ -30,6 +32,7 @@ impl<'a> AsDisplay<'a> for Path {
     }
 }
 
+#[cfg(not(feature = "no-std"))]
 impl<'a> AsDisplay<'a> for PathBuf {
     type Target = path::Display<'a>;
 
