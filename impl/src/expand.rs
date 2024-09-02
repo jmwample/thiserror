@@ -36,17 +36,17 @@ fn fallback(input: &DeriveInput, error: syn::Error) -> TokenStream {
         #error
 
         #[allow(unused_qualifications)]
-        impl #impl_generics ::core::error::Error for #ty #ty_generics #where_clause
+        impl #impl_generics std::error::Error for #ty #ty_generics #where_clause
         where
             // Work around trivial bounds being unstable.
             // https://github.com/rust-lang/rust/issues/48214
-            for<'workaround> #ty #ty_generics: ::core::fmt::Debug,
+            for<'workaround> #ty #ty_generics: std::fmt::Debug,
         {}
 
         #[allow(unused_qualifications)]
-        impl #impl_generics ::core::fmt::Display for #ty #ty_generics #where_clause {
-            fn fmt(&self, __formatter: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
-                ::core::unreachable!()
+        impl #impl_generics std::fmt::Display for #ty #ty_generics #where_clause {
+            fn fmt(&self, __formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+                std::unreachable!()
             }
         }
     }
@@ -60,17 +60,17 @@ fn impl_struct(input: Struct) -> TokenStream {
     let source_body = if let Some(transparent_attr) = &input.attrs.transparent {
         let only_field = &input.fields[0];
         if only_field.contains_generic {
-            error_inferred_bounds.insert(only_field.ty, quote!(::core::error::Error));
+            error_inferred_bounds.insert(only_field.ty, quote!(std::error::Error));
         }
         let member = &only_field.member;
         Some(quote_spanned! {transparent_attr.span=>
-            ::core::error::Error::source(self.#member.as_dyn_error())
+            std::error::Error::source(self.#member.as_dyn_error())
         })
     } else if let Some(source_field) = input.source_field() {
         let source = &source_field.member;
         if source_field.contains_generic {
             let ty = unoptional_type(source_field.ty);
-            error_inferred_bounds.insert(ty, quote!(::core::error::Error + 'static));
+            error_inferred_bounds.insert(ty, quote!(std::error::Error + 'static));
         }
         let asref = if type_is_option(source_field.ty) {
             Some(quote_spanned!(source.member_span()=> .as_ref()?))
@@ -81,14 +81,14 @@ fn impl_struct(input: Struct) -> TokenStream {
             self.#source #asref.as_dyn_error()
         };
         Some(quote! {
-            ::core::option::Option::Some(#dyn_error)
+            std::option::Option::Some(#dyn_error)
         })
     } else {
         None
     };
     let source_method = source_body.map(|body| {
         quote! {
-            fn source(&self) -> ::core::option::Option<&(dyn ::core::error::Error + 'static)> {
+            fn source(&self) -> std::option::Option<&(dyn std::error::Error + 'static)> {
                 use thiserror::__private::AsDynError as _;
                 #body
             }
@@ -102,7 +102,7 @@ fn impl_struct(input: Struct) -> TokenStream {
             let source = &source_field.member;
             let source_provide = if type_is_option(source_field.ty) {
                 quote_spanned! {source.member_span()=>
-                    if let ::core::option::Option::Some(source) = &self.#source {
+                    if let std::option::Option::Some(source) = &self.#source {
                         source.thiserror_provide(#request);
                     }
                 }
@@ -115,7 +115,7 @@ fn impl_struct(input: Struct) -> TokenStream {
                 None
             } else if type_is_option(backtrace_field.ty) {
                 Some(quote! {
-                    if let ::core::option::Option::Some(backtrace) = &self.#backtrace {
+                    if let std::option::Option::Some(backtrace) = &self.#backtrace {
                         #request.provide_ref::<std::backtrace::Backtrace>(backtrace);
                     }
                 })
@@ -131,7 +131,7 @@ fn impl_struct(input: Struct) -> TokenStream {
             }
         } else if type_is_option(backtrace_field.ty) {
             quote! {
-                if let ::core::option::Option::Some(backtrace) = &self.#backtrace {
+                if let std::option::Option::Some(backtrace) = &self.#backtrace {
                     #request.provide_ref::<std::backtrace::Backtrace>(backtrace);
                 }
             }
@@ -141,7 +141,7 @@ fn impl_struct(input: Struct) -> TokenStream {
             }
         };
         quote! {
-            fn provide<'_request>(&'_request self, #request: &mut ::core::error::Request<'_request>) {
+            fn provide<'_request>(&'_request self, #request: &mut std::error::Request<'_request>) {
                 #body
             }
         }
@@ -152,7 +152,7 @@ fn impl_struct(input: Struct) -> TokenStream {
         let only_field = &input.fields[0].member;
         display_implied_bounds.insert((0, Trait::Display));
         Some(quote! {
-            ::core::fmt::Display::fmt(&self.#only_field, __formatter)
+            std::fmt::Display::fmt(&self.#only_field, __formatter)
         })
     } else if let Some(display) = &input.attrs.display {
         display_implied_bounds.clone_from(&display.implied_bounds);
@@ -178,9 +178,9 @@ fn impl_struct(input: Struct) -> TokenStream {
         let display_where_clause = display_inferred_bounds.augment_where_clause(input.generics);
         quote! {
             #[allow(unused_qualifications)]
-            impl #impl_generics ::core::fmt::Display for #ty #ty_generics #display_where_clause {
+            impl #impl_generics std::fmt::Display for #ty #ty_generics #display_where_clause {
                 #[allow(clippy::used_underscore_binding)]
-                fn fmt(&self, __formatter: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+                fn fmt(&self, __formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
                     #body
                 }
             }
@@ -193,7 +193,7 @@ fn impl_struct(input: Struct) -> TokenStream {
         let body = from_initializer(from_field, backtrace_field);
         quote! {
             #[allow(unused_qualifications)]
-            impl #impl_generics ::core::convert::From<#from> for #ty #ty_generics #where_clause {
+            impl #impl_generics std::convert::From<#from> for #ty #ty_generics #where_clause {
                 #[allow(deprecated)]
                 fn from(source: #from) -> Self {
                     #ty #body
@@ -211,7 +211,7 @@ fn impl_struct(input: Struct) -> TokenStream {
 
     quote! {
         #[allow(unused_qualifications)]
-        impl #impl_generics ::core::error::Error for #ty #ty_generics #error_where_clause {
+        impl #impl_generics std::error::Error for #ty #ty_generics #error_where_clause {
             #source_method
             #provide_method
         }
@@ -231,11 +231,11 @@ fn impl_enum(input: Enum) -> TokenStream {
             if let Some(transparent_attr) = &variant.attrs.transparent {
                 let only_field = &variant.fields[0];
                 if only_field.contains_generic {
-                    error_inferred_bounds.insert(only_field.ty, quote!(::core::error::Error));
+                    error_inferred_bounds.insert(only_field.ty, quote!(std::error::Error));
                 }
                 let member = &only_field.member;
                 let source = quote_spanned! {transparent_attr.span=>
-                    ::core::error::Error::source(transparent.as_dyn_error())
+                    std::error::Error::source(transparent.as_dyn_error())
                 };
                 quote! {
                     #ty::#ident {#member: transparent} => #source,
@@ -244,7 +244,7 @@ fn impl_enum(input: Enum) -> TokenStream {
                 let source = &source_field.member;
                 if source_field.contains_generic {
                     let ty = unoptional_type(source_field.ty);
-                    error_inferred_bounds.insert(ty, quote!(::core::error::Error + 'static));
+                    error_inferred_bounds.insert(ty, quote!(std::error::Error + 'static));
                 }
                 let asref = if type_is_option(source_field.ty) {
                     Some(quote_spanned!(source.member_span()=> .as_ref()?))
@@ -256,16 +256,16 @@ fn impl_enum(input: Enum) -> TokenStream {
                     #varsource #asref.as_dyn_error()
                 };
                 quote! {
-                    #ty::#ident {#source: #varsource, ..} => ::core::option::Option::Some(#dyn_error),
+                    #ty::#ident {#source: #varsource, ..} => std::option::Option::Some(#dyn_error),
                 }
             } else {
                 quote! {
-                    #ty::#ident {..} => ::core::option::Option::None,
+                    #ty::#ident {..} => std::option::Option::None,
                 }
             }
         });
         Some(quote! {
-            fn source(&self) -> ::core::option::Option<&(dyn ::core::error::Error + 'static)> {
+            fn source(&self) -> std::option::Option<&(dyn std::error::Error + 'static)> {
                 use thiserror::__private::AsDynError as _;
                 #[allow(deprecated)]
                 match self {
@@ -290,7 +290,7 @@ fn impl_enum(input: Enum) -> TokenStream {
                     let varsource = quote!(source);
                     let source_provide = if type_is_option(source_field.ty) {
                         quote_spanned! {source.member_span()=>
-                            if let ::core::option::Option::Some(source) = #varsource {
+                            if let std::option::Option::Some(source) = #varsource {
                                 source.thiserror_provide(#request);
                             }
                         }
@@ -301,7 +301,7 @@ fn impl_enum(input: Enum) -> TokenStream {
                     };
                     let self_provide = if type_is_option(backtrace_field.ty) {
                         quote! {
-                            if let ::core::option::Option::Some(backtrace) = backtrace {
+                            if let std::option::Option::Some(backtrace) = backtrace {
                                 #request.provide_ref::<std::backtrace::Backtrace>(backtrace);
                             }
                         }
@@ -329,7 +329,7 @@ fn impl_enum(input: Enum) -> TokenStream {
                     let varsource = quote!(source);
                     let source_provide = if type_is_option(source_field.ty) {
                         quote_spanned! {backtrace.member_span()=>
-                            if let ::core::option::Option::Some(source) = #varsource {
+                            if let std::option::Option::Some(source) = #varsource {
                                 source.thiserror_provide(#request);
                             }
                         }
@@ -349,7 +349,7 @@ fn impl_enum(input: Enum) -> TokenStream {
                     let backtrace = &backtrace_field.member;
                     let body = if type_is_option(backtrace_field.ty) {
                         quote! {
-                            if let ::core::option::Option::Some(backtrace) = backtrace {
+                            if let std::option::Option::Some(backtrace) = backtrace {
                                 #request.provide_ref::<std::backtrace::Backtrace>(backtrace);
                             }
                         }
@@ -370,7 +370,7 @@ fn impl_enum(input: Enum) -> TokenStream {
             }
         });
         Some(quote! {
-            fn provide<'_request>(&'_request self, #request: &mut ::core::error::Request<'_request>) {
+            fn provide<'_request>(&'_request self, #request: &mut std::error::Request<'_request>) {
                 #[allow(deprecated)]
                 match self {
                     #(#arms)*
@@ -408,7 +408,7 @@ fn impl_enum(input: Enum) -> TokenStream {
                         Member::Unnamed(index) => format_ident!("_{}", index),
                     };
                     display_implied_bounds.insert((0, Trait::Display));
-                    quote!(::core::fmt::Display::fmt(#only_field, __formatter))
+                    quote!(std::fmt::Display::fmt(#only_field, __formatter))
                 }
             };
             for (field, bound) in display_implied_bounds {
@@ -427,8 +427,8 @@ fn impl_enum(input: Enum) -> TokenStream {
         let display_where_clause = display_inferred_bounds.augment_where_clause(input.generics);
         Some(quote! {
             #[allow(unused_qualifications)]
-            impl #impl_generics ::core::fmt::Display for #ty #ty_generics #display_where_clause {
-                fn fmt(&self, __formatter: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+            impl #impl_generics std::fmt::Display for #ty #ty_generics #display_where_clause {
+                fn fmt(&self, __formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
                     #use_as_display
                     #[allow(unused_variables, deprecated, clippy::used_underscore_binding)]
                     match #void_deref self {
@@ -449,7 +449,7 @@ fn impl_enum(input: Enum) -> TokenStream {
         let body = from_initializer(from_field, backtrace_field);
         Some(quote! {
             #[allow(unused_qualifications)]
-            impl #impl_generics ::core::convert::From<#from> for #ty #ty_generics #where_clause {
+            impl #impl_generics std::convert::From<#from> for #ty #ty_generics #where_clause {
                 #[allow(deprecated)]
                 fn from(source: #from) -> Self {
                     #ty::#variant #body
@@ -467,7 +467,7 @@ fn impl_enum(input: Enum) -> TokenStream {
 
     quote! {
         #[allow(unused_qualifications)]
-        impl #impl_generics ::core::error::Error for #ty #ty_generics #error_where_clause {
+        impl #impl_generics std::error::Error for #ty #ty_generics #error_where_clause {
             #source_method
             #provide_method
         }
@@ -504,7 +504,7 @@ fn use_as_display(needs_as_display: bool) -> Option<TokenStream> {
 fn from_initializer(from_field: &Field, backtrace_field: Option<&Field>) -> TokenStream {
     let from_member = &from_field.member;
     let some_source = if type_is_option(from_field.ty) {
-        quote!(::core::option::Option::Some(source))
+        quote!(std::option::Option::Some(source))
     } else {
         quote!(source)
     };
@@ -512,11 +512,11 @@ fn from_initializer(from_field: &Field, backtrace_field: Option<&Field>) -> Toke
         let backtrace_member = &backtrace_field.member;
         if type_is_option(backtrace_field.ty) {
             quote! {
-                #backtrace_member: ::core::option::Option::Some(std::backtrace::Backtrace::capture()),
+                #backtrace_member: std::option::Option::Some(std::backtrace::Backtrace::capture()),
             }
         } else {
             quote! {
-                #backtrace_member: ::core::convert::From::from(std::backtrace::Backtrace::capture()),
+                #backtrace_member: std::convert::From::from(std::backtrace::Backtrace::capture()),
             }
         }
     });

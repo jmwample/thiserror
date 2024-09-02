@@ -9,14 +9,15 @@ derive(Error)
 This library provides a convenient derive macro for the standard library's
 [`std::error::Error`] trait.
 
-[`std::error::Error`]: https://doc.rust-lang.org/core/error/trait.Error.html
+[`std::error::Error`]: https://doc.rust-lang.org/std/error/trait.Error.html
 
 ```toml
 [dependencies]
 thiserror = "1.0"
 ```
 
-*Compiler support: requires rustc 1.81+*
+*Compiler support: requires rustc 1.56+*
+*Compiler `no-std` support: requires rustc 1.81+*
 
 <br>
 
