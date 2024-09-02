@@ -14,6 +14,11 @@
     clippy::too_many_lines,
     clippy::wrong_self_convention
 )]
+#![cfg_attr(feature = "no-std", no_std)]
+
+#[rustversion::before(1.81)]
+#[cfg(feature = "no-std")]
+::core::compile_error!("no-std feature requires rustversion 1.81 or newer");
 
 extern crate proc_macro;
 
