@@ -1,5 +1,9 @@
-use core::error::Error;
 use core::panic::UnwindSafe;
+#[rustversion::since(1.81)]
+#[cfg(feature="no-std")]
+use core::error::Error;
+#[cfg(not(feature="no-std"))]
+use std::error::Error;
 
 #[doc(hidden)]
 pub trait AsDynError<'a>: Sealed {

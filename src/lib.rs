@@ -9,7 +9,7 @@
 //! This library provides a convenient derive macro for the standard library's
 //! [`std::error::Error`] trait.
 //!
-//! [`std::error::Error`]: https://doc.rust-lang.org/core/error/trait.Error.html
+//! [`std::error::Error`]: https://doc.rust-lang.org/std/error/trait.Error.html
 //!
 //! <br>
 //!

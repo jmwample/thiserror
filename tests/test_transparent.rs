@@ -6,14 +6,15 @@ use anyhow::anyhow;
 use core::error::Error as _;
 #[cfg(not(feature="no-std"))]
 use std::error::Error as _;
+#[cfg(not(feature="no-std"))]
+use std::io;
+
 
 use thiserror::Error;
 
 #[cfg(not(feature = "no-std"))]
 #[test]
 fn test_transparent_struct() {
-    use std::io;
-
     #[derive(Error, Debug)]
     #[error(transparent)]
     struct Error(ErrorKind);
