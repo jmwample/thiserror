@@ -7,9 +7,9 @@
 //! <br>
 //!
 //! This library provides a convenient derive macro for the standard library's
-//! [`core::error::Error`] trait.
+//! [`std::error::Error`] trait.
 //!
-//! [`core::error::Error`]: https://doc.rust-lang.org/core/error/trait.Error.html
+//! [`std::error::Error`]: https://doc.rust-lang.org/core/error/trait.Error.html
 //!
 //! <br>
 //!
@@ -40,7 +40,7 @@
 //! # Details
 //!
 //! - Thiserror deliberately does not appear in your public API. You get the
-//!   same thing as if you had written an implementation of `core::error::Error`
+//!   same thing as if you had written an implementation of `std::error::Error`
 //!   by hand, and switching from handwritten impls to thiserror or vice versa
 //!   is not a breaking change.
 //!
@@ -125,8 +125,8 @@
 //!   The `#[from]` attribute always implies that the same field is `#[source]`,
 //!   so you don't ever need to specify both attributes.
 //!
-//!   Any error type that implements `core::error::Error` or dereferences to `dyn
-//!   core::error::Error` will work as a source.
+//!   Any error type that implements `std::error::Error` or dereferences to `dyn
+//!   std::error::Error` will work as a source.
 //!
 //!   ```rust
 //!   # use core::fmt::{self, Display};
@@ -236,10 +236,16 @@
     clippy::wildcard_imports
 )]
 #![cfg_attr(error_generic_member_access, feature(error_generic_member_access))]
-#![cfg_attr(not(feature = "std"), no_std)]
+
+#[rustversion::attr(all(since(1.81),feature = "no-std"), no_std)]
 
 #[cfg(all(thiserror_nightly_testing, not(error_generic_member_access)))]
 compile_error!("Build script probe failed to compile.");
+
+
+#[rustversion::before(1.81)]
+#[cfg(feature="no-std")]
+::core::compile_error!("no-std feature requires rustversion 1.81 or newer");
 
 mod aserror;
 mod display;
@@ -247,6 +253,19 @@ mod display;
 mod provide;
 
 pub use thiserror_impl::*;
+
+#[cfg(not(feature="no-std"))]
+pub trait Error: std::error::Error {}
+#[cfg(not(feature="no-std"))]
+impl<T: std::error::Error> Error for T {}
+
+
+#[rustversion::since(1.81)]
+#[cfg(feature="no-std")]
+pub trait Error: core::error::Error {}
+#[rustversion::since(1.81)]
+#[cfg(feature="no-std")]
+impl<T: core::error::Error> Error for T {}
 
 // Not public API.
 #[doc(hidden)]

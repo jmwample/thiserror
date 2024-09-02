@@ -1,4 +1,10 @@
+
+#[rustversion::since(1.81)]
+#[cfg(feature="no-std")]
 use core::error::{Error, Request};
+
+#[cfg(not(feature="no-std"))]
+use std::error::{Error, Request};
 
 #[doc(hidden)]
 pub trait ThiserrorProvide: Sealed {

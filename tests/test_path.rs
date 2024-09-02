@@ -1,4 +1,4 @@
-#![cfg(feature = "std")]
+#![cfg(not(feature = "no-std"))]
 
 use core::fmt::Display;
 use ref_cast::RefCast;

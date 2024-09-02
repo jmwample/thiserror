@@ -2,7 +2,11 @@
 
 use thiserror::Error;
 
-pub use core::error::Error;
+#[rustversion::since(1.81)]
+#[cfg(feature="no-std")]
+pub use core::error::Error as _;
+#[cfg(not(feature="no-std"))]
+pub use std::error::Error as _;
 
 #[test]
 fn test_unused_qualifications() {

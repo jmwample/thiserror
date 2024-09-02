@@ -1,4 +1,9 @@
+#[rustversion::since(1.81)]
+#[cfg(feature="no-std")]
 use core::error::Error as StdError;
+#[cfg(not(feature="no-std"))]
+use std::error::Error as StdError;
+
 use std::io;
 use thiserror::Error;
 
