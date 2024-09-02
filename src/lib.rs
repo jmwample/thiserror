@@ -237,14 +237,12 @@
 )]
 #![cfg_attr(error_generic_member_access, feature(error_generic_member_access))]
 
-#[rustversion::attr(all(since(1.81),feature = "no-std"), no_std)]
-
+#[rustversion::attr(all(since(1.81), feature = "no-std"), no_std)]
 #[cfg(all(thiserror_nightly_testing, not(error_generic_member_access)))]
 compile_error!("Build script probe failed to compile.");
 
-
 #[rustversion::before(1.81)]
-#[cfg(feature="no-std")]
+#[cfg(feature = "no-std")]
 ::core::compile_error!("no-std feature requires rustversion 1.81 or newer");
 
 mod aserror;
@@ -254,17 +252,16 @@ mod provide;
 
 pub use thiserror_impl::*;
 
-#[cfg(not(feature="no-std"))]
+#[cfg(not(feature = "no-std"))]
 pub trait Error: std::error::Error {}
-#[cfg(not(feature="no-std"))]
+#[cfg(not(feature = "no-std"))]
 impl<T: std::error::Error> Error for T {}
 
-
 #[rustversion::since(1.81)]
-#[cfg(feature="no-std")]
+#[cfg(feature = "no-std")]
 pub trait Error: core::error::Error {}
 #[rustversion::since(1.81)]
-#[cfg(feature="no-std")]
+#[cfg(feature = "no-std")]
 impl<T: core::error::Error> Error for T {}
 
 // Not public API.
